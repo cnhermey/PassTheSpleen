@@ -21,7 +21,7 @@ local function Probe()
   ns.Print("Probe: build", build, "interface", iface, "version", ns.VERSION)
   local apis = {
     "C_Spell.GetSpellName", "GetSpellInfo", "C_ChatInfo.SendChatMessage", "SendChatMessage",
-    "issecretvalue", "IsInInstance", "IsEncounterInProgress", "Settings.RegisterCanvasLayoutCategory", "MinimalSliderWithSteppersMixin",
+    "issecretvalue", "IsInInstance", "IsEncounterInProgress", "UnitRace", "Settings.RegisterCanvasLayoutCategory", "MinimalSliderWithSteppersMixin",
   }
   local line = {}
   for _, name in ipairs(apis) do
@@ -36,7 +36,8 @@ local function Probe()
   table.sort(ids)
   P("  Cannibalize: name " .. tostring(S.name) .. " · IDs " .. table.concat(ids, ", ")
     .. " · learned " .. tostring(ns.db.learnedID or "not yet"))
-  P("  Seen " .. S.seen .. " · yelled " .. B.sent .. " (" .. B.auto .. " automatic)"
+  P("  Seen " .. S.seen .. " · yelled " .. B.sent .. " (" .. B.auto .. " automatic) · reactions " .. S.reacted
+    .. " · you're Undead " .. tostring(S:IAmUndead())
     .. (B.lastError and (" · last error " .. No(B.lastError)) or ""))
   P("  In instance " .. tostring(B:InInstance()) .. " · boss fight " .. tostring(B:InBossFight())
     .. " · in party " .. tostring(ns.Clean(IsInGroup and IsInGroup()))
@@ -47,6 +48,7 @@ local function Help()
   ns.Print("commands:")
   P("  /spleen: open the settings")
   P("  /spleen test: yell with your name (button outside instances)")
+  P("  /spleen react: test a reaction, as if Thrallbane had yelled")
   P("  /spleen on | off: turn it on or off")
   P("  /spleen reset: move the yell button back to the top")
   P("  /spleen probe: developer report")
@@ -61,6 +63,8 @@ SlashCmdList.PASSTHESPLEEN = function(msg)
     ns.Options:Open()
   elseif cmd == "test" then
     ns.Spleen:Test()
+  elseif cmd == "react" then
+    ns.Spleen:TestReaction()
   elseif cmd == "on" or cmd == "off" then
     ns.Options:Set("enabled", cmd == "on")
     ns.Print(cmd == "on" and "On." or "Off.")

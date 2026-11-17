@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.2.0 (2026-11-16)
+- The other Undead in your party now yell back. When an Undead uses Cannibalize, they yell a line; every other Undead in the party with the addon hears it and, a second or two later, yells a reaction that fits that line (for example "ME NEXT! I CALLED THE SPLEEN!"). Each line has 3 reactions, plus 3 general ones, and nobody repeats one that's already been yelled.
+- Only the person who cannibalizes yells the first line now. Other races no longer get a button for a party member's Cannibalize.
+- Works inside instances without addon messages: reactions are set off by hearing the caster's yell.
+- New setting "React to other Undead"; "Also for my own" is now "When I cannibalize". New "Test reaction" button and `/spleen react`.
+
 ## 0.1.1 (2026-11-16)
 - Inside dungeons, raids and other instances, you yell right away again, with no button (as the first test version did). During a boss fight, and out in the world, the button is used.
 - If an automatic yell fails, the button appears instead.

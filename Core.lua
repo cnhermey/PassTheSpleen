@@ -48,8 +48,9 @@ end
 -- Saved settings (account-wide)
 ---------------------------------------------------------------------------
 ns.DEFAULTS = {
-  enabled = true,            -- yell when someone in your party uses Cannibalize
-  includeSelf = true,        -- also for your own Cannibalize
+  enabled = true,            -- yell for Cannibalize (yours, or reactions to your party's)
+  includeSelf = true,        -- yell the first line for your own Cannibalize
+  react = true,              -- if you're Undead, react to a party member's line
   sound = true,              -- raid warning sound when the button appears
   buttonSeconds = 12,        -- how long the yell button stays up
   buttonPoint = nil,         -- { point, relPoint, x, y } after a Shift-drag

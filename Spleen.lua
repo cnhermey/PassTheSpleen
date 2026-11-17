@@ -1,4 +1,12 @@
--- Pass the Spleen: spots Cannibalize in your party and picks the yell.
+-- Pass the Spleen: spots Cannibalize in your party and picks the yells.
+--
+-- Your own Cannibalize: you yell one of LINES with your name.
+-- A party member's Cannibalize (and you are Undead): you wait to hear their
+-- yell, work out which line it was, then yell a matching reaction from
+-- REACTIONS a moment later. Nothing is sent between addons (Forever blocks
+-- that in instances); the caster's yell in chat is the signal. Reactions
+-- already yelled by others in the group are skipped, so everyone says
+-- something different.
 --
 -- Cannibalize is channeled, so UNIT_SPELLCAST_CHANNEL_START is the main
 -- signal; UNIT_SPELLCAST_SUCCEEDED is a backup in case Forever made it a
@@ -32,6 +40,25 @@ S.LINES = {
   "HOLD MY SPLEEN! %s IS GOING IN!",
 }
 
+-- Reactions for each line above, by position. %s is the caster's name.
+S.REACTIONS = {
+  { "ME NEXT! I CALLED THE SPLEEN!", "SAVE ME THE SPLEEN, %s!", "DON'T HOG THE SPLEEN, %s!" },
+  { "I'LL TAKE A SPLEEN TO GO!", "PLENTY? %s ALREADY ATE HALF OF IT!", "GET IN LINE, I'M NEXT!" },
+  { "NAPKINS ARE FOR THE LIVING!", "FORGET THE NAPKIN, PASS THE GRAVY!", "%s, YOU'VE GOT SOME... EVERYWHERE." },
+  { "FINE, BUT I GET THE KIDNEYS!", "DIBS ON THE PANCREAS!", "NO FAIR! %s ALWAYS GETS THE LIVER!" },
+  { "IS THERE A KIDS' MENU?", "I'LL HAVE WHAT %s IS HAVING!", "COMPLIMENTS TO THE CORPSE!" },
+  { "ME! ME! I WANT SECONDS!", "SECONDS? I HAVEN'T HAD FIRSTS!", "PASS IT THIS WAY, %s!" },
+  { "THAT'S... ACTUALLY A GOOD POINT.", "THE FORSAKEN LAWYERS AGREE!", "I'M ALSO DEAD! ME NEXT!" },
+  { "I'M HOLDING IT! ...I ATE IT. SORRY.", "GO %s GO! LEAVE SOME FOR ME!", "SOMEONE HOLD MY SPLEEN TOO, I'M GOING IN!" },
+}
+-- When the caster's line can't be read (or isn't one of ours).
+S.GENERIC = { "ME NEXT!", "SAVE ME A BITE, %s!", "ARE YOU GOING TO FINISH THAT?" }
+
+S.WAIT = 8                 -- seconds to wait for the caster's yell
+S.waiting = {}             -- [caster name] = GetTime() of their cast
+S.round = nil              -- { caster, idx, said = { [line] = true } } of the latest reaction round
+S.reacted = 0              -- reactions yelled or offered this session (for /spleen probe)
+
 local function SpellName(id)
   if C_Spell and C_Spell.GetSpellName then
     return ns.Str(ns.Try("C_Spell.GetSpellName", C_Spell.GetSpellName, id))
@@ -60,10 +87,102 @@ function S:Line(who)
   return string.format(line, string.upper(who))
 end
 
--- Test: offer a yell with your own name (no throttle).
+---------------------------------------------------------------------------
+-- Reactions
+---------------------------------------------------------------------------
+local function Upper(who) return string.upper(who or "SOMEONE") end
+
+-- Lua patterns that match each line, with any name in place of %s.
+local PATTERNS = {}
+for i, line in ipairs(S.LINES) do
+  local p = line:gsub("([%^%$%(%)%%%.%[%]%*%+%-%?])", "%%%1")
+  p = p:gsub("%%%%s", ".+")
+  PATTERNS[i] = "^" .. p .. "$"
+end
+
+-- Which of LINES this yell is, or nil.
+function S:WhichLine(text)
+  text = ns.Str(text)
+  if not text then return nil end
+  for i, p in ipairs(PATTERNS) do
+    if text:find(p) then return i end
+  end
+end
+
+function S:IAmUndead()
+  local _, race = UnitRace("player")
+  race = ns.Str(race)
+  return race == "Scourge" or race == "Undead"
+end
+
+-- Pick a reaction nobody in this round has yelled yet.
+function S:PickReaction()
+  local r = self.round
+  if not r then return nil end
+  local function Fresh(list)
+    local out = {}
+    for _, line in ipairs(list) do
+      local text = string.format(line, Upper(r.caster))
+      if not r.said[text] then out[#out + 1] = text end
+    end
+    return out
+  end
+  local options = r.idx and Fresh(self.REACTIONS[r.idx]) or {}
+  if #options == 0 then options = Fresh(self.GENERIC) end
+  if #options == 0 then return nil end -- everything's been said
+  return options[math.random(#options)]
+end
+
+-- The caster's line was heard: react after a short, random pause so
+-- several Undead don't all yell at once.
+function S:StartRound(caster, idx)
+  self.round = { caster = caster, idx = idx, said = {} }
+  local round = self.round
+  ns.Debounce("react", 1 + math.random() * 2, function()
+    if self.round ~= round then return end
+    local msg = self:PickReaction()
+    if not msg then return end
+    round.said[msg] = true
+    self.reacted = self.reacted + 1
+    ns.YellButton:Deliver(msg)
+  end)
+end
+
+local function Short(name)
+  name = ns.Str(name)
+  if not name then return nil end
+  return (name:match("^([^%-]+)")) or name
+end
+
+local function OnYell(_, text, sender)
+  local who = Short(sender)
+  if not who then return end
+  text = ns.Str(text)
+
+  -- Someone else's reaction in the current round: don't repeat it.
+  if S.round and text then S.round.said[text] = true end
+
+  local castAt = S.waiting[who]
+  if not castAt then return end
+  if GetTime() - castAt > S.WAIT then S.waiting[who] = nil; return end
+  local idx = S:WhichLine(text)
+  if not idx then return end -- a yell from them, but not the spleen line
+  S.waiting[who] = nil
+  ns.Debug("Heard", who, "line", idx)
+  S:StartRound(who, idx)
+end
+
+ns.On("CHAT_MSG_YELL", OnYell)
+
+-- Test: yell (or offer) a line with your own name (no throttle).
 function S:Test()
   local me = ns.Str(UnitName("player")) or "You"
   ns.Fire("CANNIBALIZE", me, "player")
+end
+
+-- Test a reaction, as if Thrallbane had just yelled a random line.
+function S:TestReaction()
+  self:StartRound("Thrallbane", math.random(#self.LINES))
 end
 
 local function OnCast(_, unit, _, spellID)
@@ -79,7 +198,11 @@ local function OnCast(_, unit, _, spellID)
   S.last[who] = now
   S.seen = S.seen + 1
   ns.Debug("Cannibalize:", who, unit)
-  ns.Fire("CANNIBALIZE", who, unit)
+  if unit == "player" then
+    ns.Fire("CANNIBALIZE", who, unit)     -- you yell the first line
+  elseif ns.db.react and S:IAmUndead() then
+    S.waiting[who] = now                  -- react once their yell is heard
+  end
 end
 
 ns.On("UNIT_SPELLCAST_CHANNEL_START", OnCast)
