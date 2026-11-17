@@ -26,7 +26,7 @@ local LAYOUT = {
   {
     { header = "Yelling" },
     { kind = "check", key = "enabled",     label = "Yell for Cannibalize",
-      tip = "When someone in your party uses Cannibalize, a button appears. Click it to yell." },
+      tip = "When someone in your party uses Cannibalize: in a dungeon you yell right away; elsewhere a button appears, click it to yell." },
     { kind = "check", key = "includeSelf", label = "Also for my own" },
     { kind = "check", key = "sound",       label = "Play a sound" },
     { kind = "slider", key = "buttonSeconds", label = "Button stays up", min = 5, max = 30, step = 1, suffix = " s" },

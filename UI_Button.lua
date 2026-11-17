@@ -1,13 +1,15 @@
--- Pass the Spleen: the yell button.
+-- Pass the Spleen: the yell, and the yell button.
 --
--- Forever (Midnight rules) only lets an addon /yell from a real click or key
--- press, and blocks addon chat inside instances. So the addon never yells on
--- its own: it shows the line on a Blizzard button, and your click sends it.
--- The button hides itself after a few seconds. Shift-drag to move it.
+-- Inside an instance (outside a boss fight) an addon may /yell on its own, so
+-- the line goes out right away. In the open world a /yell needs a real click
+-- or key press, so the line goes on a Blizzard button and your click sends it.
+-- During a boss fight the button is used too. If an automatic yell fails, the
+-- button is the fallback. The button hides itself after a few seconds.
+-- Shift-drag to move it.
 local _, ns = ...
 local UI = ns.UI
 
-local B = { sent = 0 }
+local B = { sent = 0, auto = 0 }
 ns.YellButton = B
 
 local send = (C_ChatInfo and C_ChatInfo.SendChatMessage) or SendChatMessage
@@ -96,18 +98,44 @@ function B:Dismiss()
   end
 end
 
+local function Yell(msg)
+  local ok, err = pcall(send, msg, "YELL")
+  if ok then
+    B.sent = B.sent + 1
+  else
+    B.lastError = tostring(err)
+    ns.Debug("yell failed:", B.lastError)
+  end
+  return ok
+end
+
 -- Called from the click, so the game allows the yell.
 function B:Send()
   local msg = self.pending
   self:Dismiss()
-  if not msg then return end
-  local ok, err = pcall(send, msg, "YELL")
-  if ok then
-    self.sent = self.sent + 1
-  else
-    self.lastError = tostring(err)
-    ns.Debug("yell failed:", self.lastError)
+  if msg then Yell(msg) end
+end
+
+-- True inside a dungeon, raid, battleground or other instance.
+function B:InInstance()
+  local inInstance = ns.Clean(ns.Try("IsInInstance", IsInInstance))
+  return inInstance == true or inInstance == 1
+end
+
+function B:InBossFight()
+  if not IsEncounterInProgress then return false end
+  return ns.Clean(ns.Try("IsEncounterInProgress", IsEncounterInProgress)) == true
+end
+
+-- Yell right away where the game allows it, else offer the button.
+function B:Deliver(msg)
+  if self:InInstance() and not self:InBossFight() then
+    if Yell(msg) then
+      self.auto = self.auto + 1
+      return
+    end
   end
+  self:Offer(msg)
 end
 
 function B:ResetPosition()
@@ -116,5 +144,5 @@ function B:ResetPosition()
 end
 
 ns.Listen("CANNIBALIZE", function(who)
-  B:Offer(ns.Spleen:Line(who))
+  B:Deliver(ns.Spleen:Line(who))
 end)

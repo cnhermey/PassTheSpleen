@@ -48,7 +48,7 @@ end
 -- Saved settings (account-wide)
 ---------------------------------------------------------------------------
 ns.DEFAULTS = {
-  enabled = true,            -- offer a yell when someone in your party uses Cannibalize
+  enabled = true,            -- yell when someone in your party uses Cannibalize
   includeSelf = true,        -- also for your own Cannibalize
   sound = true,              -- raid warning sound when the button appears
   buttonSeconds = 12,        -- how long the yell button stays up

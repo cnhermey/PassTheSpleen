@@ -21,7 +21,7 @@ local function Probe()
   ns.Print("Probe: build", build, "interface", iface, "version", ns.VERSION)
   local apis = {
     "C_Spell.GetSpellName", "GetSpellInfo", "C_ChatInfo.SendChatMessage", "SendChatMessage",
-    "issecretvalue", "IsInInstance", "Settings.RegisterCanvasLayoutCategory", "MinimalSliderWithSteppersMixin",
+    "issecretvalue", "IsInInstance", "IsEncounterInProgress", "Settings.RegisterCanvasLayoutCategory", "MinimalSliderWithSteppersMixin",
   }
   local line = {}
   for _, name in ipairs(apis) do
@@ -36,17 +36,17 @@ local function Probe()
   table.sort(ids)
   P("  Cannibalize: name " .. tostring(S.name) .. " · IDs " .. table.concat(ids, ", ")
     .. " · learned " .. tostring(ns.db.learnedID or "not yet"))
-  P("  Seen " .. S.seen .. " · yelled " .. B.sent
+  P("  Seen " .. S.seen .. " · yelled " .. B.sent .. " (" .. B.auto .. " automatic)"
     .. (B.lastError and (" · last error " .. No(B.lastError)) or ""))
-  local inInstance = ns.Clean(ns.Try("IsInInstance", IsInInstance))
-  P("  In instance " .. tostring(inInstance) .. " · in party " .. tostring(ns.Clean(IsInGroup and IsInGroup()))
+  P("  In instance " .. tostring(B:InInstance()) .. " · boss fight " .. tostring(B:InBossFight())
+    .. " · in party " .. tostring(ns.Clean(IsInGroup and IsInGroup()))
     .. " · settings page " .. tostring(ns.Options.category ~= nil))
 end
 
 local function Help()
   ns.Print("commands:")
   P("  /spleen: open the settings")
-  P("  /spleen test: show the yell button with your name")
+  P("  /spleen test: yell with your name (button outside instances)")
   P("  /spleen on | off: turn it on or off")
   P("  /spleen reset: move the yell button back to the top")
   P("  /spleen probe: developer report")

@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.1.1 (2026-11-16)
+- Inside dungeons, raids and other instances, you yell right away again, with no button (as the first test version did). During a boss fight, and out in the world, the button is used.
+- If an automatic yell fails, the button appears instead.
+- `/spleen probe` shows how many yells were automatic and whether a boss fight is on.
+
 ## 0.1.0 (2026-11-16)
 - First version, for WoW: Forever (interface 16001).
 - When you or anyone in your party uses Cannibalize, a **Pass the Spleen!** button appears near the top of the screen with a raid warning sound. Click it to yell one of 8 lines with that player's name, for example "THRALLBANE IS EATING A CORPSE! PASS THE SPLEEN!". The button hides itself after 12 seconds (adjustable). Hover it to see the line first.

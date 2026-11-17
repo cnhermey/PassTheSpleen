@@ -1,8 +1,8 @@
 ## Interface: 16001
 ## Title: Pass the Spleen
-## Notes: When anyone in your party uses Cannibalize, one click yells about it.
+## Notes: When anyone in your party uses Cannibalize, yells about it (one click outside dungeons).
 ## Author: cnhermey
-## Version: 0.1.0
+## Version: 0.1.1
 ## SavedVariables: PassTheSpleenDB
 ## Category: Chat
 ## IconTexture: Interface\Icons\Ability_Racial_Cannibalize
