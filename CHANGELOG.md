@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.3.1 (2026-11-21)
+- Only one message per line now. The chat is picked from where you are: /yell inside an instance (outside a boss fight); otherwise /party (or instance chat) in a group, else /say. 0.3.0 could send the same line three times in a dungeon.
+- No more "only you can see this" copy in your chat window.
+
 ## 0.3.0 (2026-11-21)
 - No more button: clicking it didn't yell out in the world. Everything is automatic now.
 - Each line goes on /yell if the game allows it, otherwise /party (instance chat in a dungeon-finder group), otherwise /say. The addon checks that the message really showed up in chat before moving on.

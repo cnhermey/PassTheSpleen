@@ -26,7 +26,7 @@ local LAYOUT = {
   {
     { header = "Yelling" },
     { kind = "check", key = "enabled",     label = "Yell for Cannibalize",
-      tip = "Sends the line on /yell, or /party if the game won't let the addon yell, or /say if you're not in a group." },
+      tip = "In a dungeon you yell. Out in the world or in a boss fight it goes to /party, or /say if you're not in a group." },
     { kind = "check", key = "includeSelf", label = "When I cannibalize",
       tip = "Send a line when you use Cannibalize." },
     { kind = "check", key = "react",       label = "React to other Undead",
