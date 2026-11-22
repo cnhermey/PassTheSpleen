@@ -30,16 +30,16 @@ local function Probe()
   end
   if #line > 0 then P("  " .. table.concat(line, "  ")) end
 
-  local S, B = ns.Spleen, ns.YellButton
+  local S, C = ns.Spleen, ns.Chat
   local ids = {}
   for id in pairs(S.ids) do ids[#ids + 1] = tostring(id) end
   table.sort(ids)
   P("  Cannibalize: name " .. tostring(S.name) .. " · IDs " .. table.concat(ids, ", ")
     .. " · learned " .. tostring(ns.db.learnedID or "not yet"))
-  P("  Seen " .. S.seen .. " · yelled " .. B.sent .. " (" .. B.auto .. " automatic) · reactions " .. S.reacted
-    .. " · you're Undead " .. tostring(S:IAmUndead())
-    .. (B.lastError and (" · last error " .. No(B.lastError)) or ""))
-  P("  In instance " .. tostring(B:InInstance()) .. " · boss fight " .. tostring(B:InBossFight())
+  P("  Seen " .. S.seen .. " · sent: yell " .. C.sent.YELL .. ", party " .. C.sent.PARTY .. ", say " .. C.sent.SAY
+    .. ", only you " .. C.local_only .. " · reactions " .. S.reacted .. " · you're Undead " .. tostring(S:IAmUndead()))
+  P("  Blocked " .. C:BlockedText() .. (C.lastError and (" · last error " .. No(C.lastError)) or ""))
+  P("  In instance " .. tostring(C:InInstance()) .. " · boss fight " .. tostring(C:InBossFight())
     .. " · in party " .. tostring(ns.Clean(IsInGroup and IsInGroup()))
     .. " · settings page " .. tostring(ns.Options.category ~= nil))
 end
@@ -47,10 +47,9 @@ end
 local function Help()
   ns.Print("commands:")
   P("  /spleen: open the settings")
-  P("  /spleen test: yell with your name (button outside instances)")
-  P("  /spleen react: test a reaction, as if Thrallbane had yelled")
+  P("  /spleen test: send a line with your name")
+  P("  /spleen react: test a reaction, as if Thrallbane had sent a line")
   P("  /spleen on | off: turn it on or off")
-  P("  /spleen reset: move the yell button back to the top")
   P("  /spleen probe: developer report")
 end
 
@@ -68,9 +67,6 @@ SlashCmdList.PASSTHESPLEEN = function(msg)
   elseif cmd == "on" or cmd == "off" then
     ns.Options:Set("enabled", cmd == "on")
     ns.Print(cmd == "on" and "On." or "Off.")
-  elseif cmd == "reset" then
-    ns.YellButton:ResetPosition()
-    ns.Print("Yell button moved back to the top.")
   elseif cmd == "probe" then
     Probe()
   else

@@ -1,10 +1,12 @@
 -- Pass the Spleen: spots Cannibalize in your party and picks the yells.
 --
--- Your own Cannibalize: you yell one of LINES with your name.
+-- Your own Cannibalize: you yell one of LINES with your name (Chat.lua picks
+-- /yell, /party or /say, whichever works).
 -- A party member's Cannibalize (and you are Undead): you wait to hear their
--- yell, work out which line it was, then yell a matching reaction from
--- REACTIONS a moment later. Nothing is sent between addons (Forever blocks
--- that in instances); the caster's yell in chat is the signal. Reactions
+-- line in /yell, /party or /say, work out which line it was, then send a
+-- matching reaction from REACTIONS a moment later. Nothing is sent between
+-- addons (Forever blocks that in instances); the caster's line in chat is
+-- the signal. Reactions
 -- already yelled by others in the group are skipped, so everyone says
 -- something different.
 --
@@ -38,6 +40,16 @@ S.LINES = {
   "WHO WANTS SECONDS? %s IS PASSING THE SPLEEN!",
   "%s: \"IT'S NOT CANNIBALISM IF I'M ALREADY DEAD!\"",
   "HOLD MY SPLEEN! %s IS GOING IN!",
+  "%s FOUND A FRESH ONE! PASS THE SPLEEN!",
+  "THE DARK LADY WATCHES OVER %s'S LUNCH BREAK!",
+  "%s IS EATING FOR TWO! (THE OTHER ONE IS ALSO DEAD.)",
+  "NOBODY TELL THE PALADINS! %s IS SNACKING!",
+  "%s: \"THIS ONE NEEDS SALT!\"",
+  "ALL YOU CAN EAT! %s IS AT THE BUFFET!",
+  "WASTE NOT, WANT NOT! %s IS CLEANING UP!",
+  "%s HAS ROTTEN TABLE MANNERS! PASS THE SPLEEN!",
+  "BRAINS ARE FOR GHOULS! %s ONLY WANTS THE SPLEEN!",
+  "A SPLEEN A DAY KEEPS THE PRIEST AWAY! %s KNOWS IT!",
 }
 
 -- Reactions for each line above, by position. %s is the caster's name.
@@ -50,14 +62,24 @@ S.REACTIONS = {
   { "ME! ME! I WANT SECONDS!", "SECONDS? I HAVEN'T HAD FIRSTS!", "PASS IT THIS WAY, %s!" },
   { "THAT'S... ACTUALLY A GOOD POINT.", "THE FORSAKEN LAWYERS AGREE!", "I'M ALSO DEAD! ME NEXT!" },
   { "I'M HOLDING IT! ...I ATE IT. SORRY.", "GO %s GO! LEAVE SOME FOR ME!", "SOMEONE HOLD MY SPLEEN TOO, I'M GOING IN!" },
+  { "FRESH? IT'S BEEN THERE SINCE TUESDAY!", "SAVE ME THE CRUNCHY BITS, %s!", "SMELLS LIKE HOME COOKING!" },
+  { "FOR THE DARK LADY! AND FOR SECONDS!", "SHE'D WANT YOU TO SHARE, %s!", "DOES THE DARK LADY WANT THE SPLEEN?" },
+  { "CONGRATULATIONS...?", "THEN I'LL EAT FOR THREE!", "IS IT A BOY OR A GHOUL, %s?" },
+  { "MY LIPS ARE SEALED. MOSTLY ROTTED, BUT SEALED.", "TOO LATE, THE PALADIN SAW!", "WHAT PALADINS? THERE WERE PALADINS?" },
+  { "TRY THE MARROW, IT'S PRE-SEASONED!", "SALT IS FOR SLUGS AND THE LIVING!", "PASS THE SALT AND THE SPLEEN, %s!" },
+  { "WHERE'S THE DESSERT CORPSE?", "I'LL WAIT FOR THE SECOND SEATING!", "%s, LEAVE SOME FOR THE GHOULS!" },
+  { "RECYCLING IS IMPORTANT!", "MOTHER WOULD BE PROUD, %s!", "I'LL DO THE DISHES! ...THE BONES, I MEAN." },
+  { "ELBOWS OFF THE CORPSE, %s!", "MY MANNERS FELL OFF WITH MY JAW!", "CHEW WITH YOUR MOUTH CLOSED! ...IF YOU STILL HAVE ONE!" },
+  { "MORE BRAINS FOR ME THEN!", "THE SPLEEN IS THE BEST PART, EVERYONE KNOWS!", "%s HAS REFINED TASTES!" },
+  { "I'VE HAD THREE TODAY! I FEEL GREAT!", "THE APOTHECARIES APPROVE, %s!", "WHAT ABOUT THE PRIEST WE ATE YESTERDAY?" },
 }
 -- When the caster's line can't be read (or isn't one of ours).
 S.GENERIC = { "ME NEXT!", "SAVE ME A BITE, %s!", "ARE YOU GOING TO FINISH THAT?" }
 
-S.WAIT = 8                 -- seconds to wait for the caster's yell
+S.WAIT = 8                 -- seconds to wait for the caster's line
 S.waiting = {}             -- [caster name] = GetTime() of their cast
 S.round = nil              -- { caster, idx, said = { [line] = true } } of the latest reaction round
-S.reacted = 0              -- reactions yelled or offered this session (for /spleen probe)
+S.reacted = 0              -- reactions sent this session (for /spleen probe)
 
 local function SpellName(id)
   if C_Spell and C_Spell.GetSpellName then
@@ -100,7 +122,7 @@ for i, line in ipairs(S.LINES) do
   PATTERNS[i] = "^" .. p .. "$"
 end
 
--- Which of LINES this yell is, or nil.
+-- Which of LINES this message is, or nil.
 function S:WhichLine(text)
   text = ns.Str(text)
   if not text then return nil end
@@ -144,7 +166,7 @@ function S:StartRound(caster, idx)
     if not msg then return end
     round.said[msg] = true
     self.reacted = self.reacted + 1
-    ns.YellButton:Deliver(msg)
+    ns.Chat:Deliver(msg)
   end)
 end
 
@@ -154,7 +176,8 @@ local function Short(name)
   return (name:match("^([^%-]+)")) or name
 end
 
-local function OnYell(_, text, sender)
+-- The caster's line in /yell, /party or /say.
+local function OnChat(_, text, sender)
   local who = Short(sender)
   if not who then return end
   text = ns.Str(text)
@@ -166,21 +189,24 @@ local function OnYell(_, text, sender)
   if not castAt then return end
   if GetTime() - castAt > S.WAIT then S.waiting[who] = nil; return end
   local idx = S:WhichLine(text)
-  if not idx then return end -- a yell from them, but not the spleen line
+  if not idx then return end -- a message from them, but not a spleen line
   S.waiting[who] = nil
   ns.Debug("Heard", who, "line", idx)
   S:StartRound(who, idx)
 end
 
-ns.On("CHAT_MSG_YELL", OnYell)
+for _, event in ipairs({ "CHAT_MSG_YELL", "CHAT_MSG_PARTY", "CHAT_MSG_PARTY_LEADER",
+    "CHAT_MSG_INSTANCE_CHAT", "CHAT_MSG_INSTANCE_CHAT_LEADER", "CHAT_MSG_SAY" }) do
+  ns.On(event, OnChat)
+end
 
--- Test: yell (or offer) a line with your own name (no throttle).
+-- Test: send a line with your own name (no throttle).
 function S:Test()
   local me = ns.Str(UnitName("player")) or "You"
   ns.Fire("CANNIBALIZE", me, "player")
 end
 
--- Test a reaction, as if Thrallbane had just yelled a random line.
+-- Test a reaction, as if Thrallbane had just sent a random line.
 function S:TestReaction()
   self:StartRound("Thrallbane", math.random(#self.LINES))
 end
@@ -199,9 +225,9 @@ local function OnCast(_, unit, _, spellID)
   S.seen = S.seen + 1
   ns.Debug("Cannibalize:", who, unit)
   if unit == "player" then
-    ns.Fire("CANNIBALIZE", who, unit)     -- you yell the first line
+    ns.Fire("CANNIBALIZE", who, unit)     -- you send the first line
   elseif ns.db.react and S:IAmUndead() then
-    S.waiting[who] = now                  -- react once their yell is heard
+    S.waiting[who] = now                  -- react once their line is heard
   end
 end
 

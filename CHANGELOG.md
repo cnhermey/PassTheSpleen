@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.3.0 (2026-11-21)
+- No more button: clicking it didn't yell out in the world. Everything is automatic now.
+- Each line goes on /yell if the game allows it, otherwise /party (instance chat in a dungeon-finder group), otherwise /say. The addon checks that the message really showed up in chat before moving on.
+- If no chat will take it (solo out in the world), the line shows in your own chat window, marked "only you can see this".
+- A chat that's blocked in the world, in an instance or in a boss fight is skipped there for the rest of the session.
+- Reactions now also hear the caster's line in /party and /say, not just /yell.
+- 10 new lines, each with 3 reactions (18 lines in all).
+- Removed the button settings ("Play a sound", "Button stays up", "Reset position") and `/spleen reset`.
+- `/spleen probe` shows how many lines went to each chat and which chats were blocked where.
+
 ## 0.2.0 (2026-11-16)
 - The other Undead in your party now yell back. When an Undead uses Cannibalize, they yell a line; every other Undead in the party with the addon hears it and, a second or two later, yells a reaction that fits that line (for example "ME NEXT! I CALLED THE SPLEEN!"). Each line has 3 reactions, plus 3 general ones, and nobody repeats one that's already been yelled.
 - Only the person who cannibalizes yells the first line now. Other races no longer get a button for a party member's Cannibalize.
