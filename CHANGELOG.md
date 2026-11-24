@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.4.0 (2026-11-24)
+- 20 new lines, each with 3 reactions (38 lines in all). For example *"ORDER UP! ONE SPLEEN, EXTRA CRISPY, FOR THRALLBANE!"* and *"THRALLBANE IS TOO HUNGRY TO WAIT FOR LOOT!"* ("NEED ON SPLEEN!").
+- Two lines no longer start with your name: chat already shows who's talking, so it's now just *"IT'S NOT CANNIBALISM IF I'M ALREADY DEAD!"* and *"THIS ONE NEEDS SALT!"*. Players still on 0.3.1 who send the old wording still get reactions.
+- Releases are now built automatically on GitHub, so WowUp picks up each new version.
+
 ## 0.3.1 (2026-11-21)
 - Only one message per line now. The chat is picked from where you are: /yell inside an instance (outside a boss fight); otherwise /party (or instance chat) in a group, else /say. 0.3.0 could send the same line three times in a dungeon.
 - No more "only you can see this" copy in your chat window.

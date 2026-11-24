@@ -2,7 +2,7 @@
 ## Title: Pass the Spleen
 ## Notes: Yell when you Cannibalize, and the other Undead in your party yell back.
 ## Author: cnhermey
-## Version: 0.3.1
+## Version: 0.4.0
 ## SavedVariables: PassTheSpleenDB
 ## Category: Chat
 ## IconTexture: Interface\Icons\Ability_Racial_Cannibalize

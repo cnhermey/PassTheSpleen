@@ -1,8 +1,8 @@
-# Pass the Spleen (v0.3.1)
+# Pass the Spleen (v0.4.0)
 
 Undead can eat corpses, and the whole party should know about it. When you use **Cannibalize**, Pass the Spleen yells about it. Then every other Undead in your party who has the addon yells back with a reaction to what you said.
 
-- **The first line.** When you cannibalize, you yell one of 18 lines with your name, for example *"THRALLBANE IS EATING A CORPSE! PASS THE SPLEEN!"*.
+- **The first line.** When you cannibalize, you yell one of 38 lines with your name, for example *"THRALLBANE IS EATING A CORPSE! PASS THE SPLEEN!"*.
 - **The reactions.** Every other Undead in your party with the addon hears that line and, a second or two later, answers with a reaction that fits it: *"ME NEXT! I CALLED THE SPLEEN!"*, *"SAVE ME THE SPLEEN, THRALLBANE!"*. Each line has 3 reactions (plus 3 general ones), and nobody repeats a reaction someone else in the group already used.
 - **One message, picked by where you are.** Inside a dungeon, raid or other instance, you yell. Out in the world, or during a boss fight, where Forever won't let an addon yell, it goes to /party (instance chat in a dungeon-finder group). If you're not in a group there, it goes to /say.
 - **No button.** Everything is automatic.
